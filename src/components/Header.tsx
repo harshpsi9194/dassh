@@ -11,39 +11,48 @@ interface HeaderProps {
   user: User | null;
   onLoginClick: () => void;
   onSidebarToggle: () => void;
+  onAboutClick: () => void;
 }
 
-const Header = ({ user, onLoginClick, onSidebarToggle }: HeaderProps) => {
+const Header = ({ user, onLoginClick, onSidebarToggle, onAboutClick }: HeaderProps) => {
   return (
-    <header className="py-6 px-4 lg:px-8">
-      <div className="max-w-6xl mx-auto flex items-center justify-between">
-        {/* Logo */}
-        <div className="flex items-center space-x-4">
+    <header className="py-4 px-4 lg:px-8">
+      <div className="max-w-7xl mx-auto flex items-center justify-between">
+        {/* Logo - moved to extreme left */}
+        <div className="flex items-center">
           <h1 
-            className="font-bold text-cyber-text text-2xl md:text-3xl tracking-widest font-cyber cyber-glow"
+            className="font-bold text-cyber-accent text-xl md:text-2xl tracking-widest font-cyber cyber-glow-sm"
             style={{ letterSpacing: '0.2em' }}
           >
-            ENGINE ARCADE
+            DASSH
           </h1>
         </div>
 
-        {/* Right side - Auth/User */}
-        <div className="flex items-center space-x-4">
+        {/* Right side - About, Auth/User */}
+        <div className="flex items-center space-x-3">
+          {/* About button */}
+          <button
+            onClick={onAboutClick}
+            className="cyber-button-small glow-on-hover text-sm"
+          >
+            ABOUT
+          </button>
+
           {user ? (
             <button
               onClick={onSidebarToggle}
-              className="flex items-center space-x-2 cyber-button glow-on-hover"
+              className="flex items-center space-x-2 cyber-button-small glow-on-hover text-sm"
             >
-              <Menu size={18} />
+              <Menu size={16} />
               <span className="hidden sm:inline">MENU</span>
             </button>
           ) : (
             <button
               onClick={onLoginClick}
-              className="cyber-button glow-on-hover"
+              className="cyber-button-small glow-on-hover text-sm"
             >
               <span className="flex items-center space-x-2">
-                <User size={18} />
+                <User size={16} />
                 <span>LOGIN</span>
               </span>
             </button>

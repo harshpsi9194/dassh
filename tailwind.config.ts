@@ -76,7 +76,7 @@ export default {
 					terminal: '#0f0f23',
 					primary: '#00ff00',
 					secondary: '#cc00ff',
-					accent: '#00ffff',
+					accent: '#00FFCC', // Updated to greenish-blue
 					text: '#f0f0f0',
 					muted: '#666666',
 					border: '#333333',
