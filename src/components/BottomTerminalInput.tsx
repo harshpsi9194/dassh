@@ -7,15 +7,14 @@ const BottomTerminalInput = () => {
   const [isUserTyping, setIsUserTyping] = useState(false);
   const [currentSuggestionIndex, setCurrentSuggestionIndex] = useState(0);
   const [displayedText, setDisplayedText] = useState('');
-  const [cursorVisible, setCursorVisible] = useState(true);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const suggestions = [
-    "create-game Make a retro arcade shooter with pixel art",
-    "create-game Design a puzzle platformer with gravity manipulation",
-    "create-game Build a text-based adventure in a futuristic wasteland",
-    "create-game Generate a top-down dungeon crawler with magic spells",
-    "create-game Produce a simple racing game with cartoon graphics"
+    "Make a retro arcade shooter with pixel art",
+    "Design a puzzle platformer with gravity manipulation",
+    "Build a text-based adventure in a futuristic wasteland",
+    "Generate a top-down dungeon crawler with magic spells",
+    "Produce a simple racing game with cartoon graphics"
   ];
 
   // Handle suggestion cycling and typing animation
@@ -54,15 +53,6 @@ const BottomTerminalInput = () => {
     return () => clearTimeout(timeoutId);
   }, [currentSuggestionIndex, isUserTyping]);
 
-  // Cursor blink effect
-  useEffect(() => {
-    const blinkInterval = setInterval(() => {
-      setCursorVisible(prev => !prev);
-    }, 500);
-
-    return () => clearInterval(blinkInterval);
-  }, []);
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value);
     setIsUserTyping(e.target.value.length > 0);
@@ -92,10 +82,9 @@ const BottomTerminalInput = () => {
   };
 
   return (
-    <div className="bottom-terminal mb-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="bottom-terminal-input flex items-center p-3">
-          <span className="text-cyber-accent mr-3 font-mono">$</span>
+    <div className="fixed bottom-0 left-0 right-0 mb-8 z-20">
+      <div className="max-w-4xl mx-auto px-4">
+        <div className="bg-cyber-terminal border border-cyber-border rounded-xl p-4 flex items-center space-x-4">
           <div className="flex-1 relative">
             <input
               ref={inputRef}
@@ -105,7 +94,7 @@ const BottomTerminalInput = () => {
               onFocus={handleInputFocus}
               onBlur={handleInputBlur}
               onKeyPress={handleKeyPress}
-              className="w-full bg-transparent border-none outline-none text-cyber-text font-mono"
+              className="w-full bg-transparent border-none outline-none text-cyber-text font-mono text-sm"
               placeholder=""
               style={{ 
                 color: isUserTyping ? '#c0c0c0' : 'transparent',
@@ -113,18 +102,18 @@ const BottomTerminalInput = () => {
               }}
             />
             {!isUserTyping && (
-              <div className="absolute inset-0 flex items-center text-cyber-accent font-mono pointer-events-none">
+              <div className="absolute inset-0 flex items-center text-cyber-text font-mono text-sm pointer-events-none">
                 {displayedText}
-                <span className={`cursor ${cursorVisible ? 'opacity-100' : 'opacity-0'}`}></span>
+                <span className="ml-1 w-2 h-4 bg-cyber-accent"></span>
               </div>
             )}
           </div>
           <button
             onClick={handleSubmit}
-            className="submit-button ml-3"
+            className="bg-cyber-accent text-cyber-dark w-10 h-10 rounded-lg flex items-center justify-center hover:bg-opacity-80 transition-all duration-300"
             disabled={!inputValue.trim()}
           >
-            <ArrowUp size={20} />
+            <ArrowUp size={18} />
           </button>
         </div>
       </div>

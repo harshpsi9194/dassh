@@ -1,5 +1,5 @@
 
-import { Github, ArrowLeft } from 'lucide-react';
+import { Github, ArrowLeft, FileText } from 'lucide-react';
 
 interface AboutPageProps {
   onBackClick: () => void;
@@ -8,6 +8,11 @@ interface AboutPageProps {
 const AboutPage = ({ onBackClick }: AboutPageProps) => {
   const handleGitHubClick = () => {
     window.open('https://github.com/dassh-project', '_blank', 'noopener,noreferrer');
+  };
+
+  const handleDocsClick = () => {
+    // You can update this URL to point to your actual docs
+    window.open('https://docs.dassh-project.com', '_blank', 'noopener,noreferrer');
   };
 
   return (
@@ -90,26 +95,39 @@ const AboutPage = ({ onBackClick }: AboutPageProps) => {
             </div>
           </div>
 
-          {/* GitHub Repository */}
+          {/* Documentation and GitHub */}
           <div className="text-center">
             <h2 className="text-2xl font-bold text-cyber-accent mb-6">
-              Open Source
+              Resources
             </h2>
             <p className="text-cyber-text mb-6 max-w-2xl mx-auto">
               DASSH is built with transparency and community collaboration in mind. 
-              Explore our codebase, contribute to development, or fork the project for your own use.
+              Explore our documentation, contribute to development, or fork the project for your own use.
             </p>
-            <button
-              onClick={handleGitHubClick}
-              className="cyber-button px-6 py-3 glow-on-hover flex items-center justify-center mx-auto text-sm bg-cyber-card border border-cyber-accent hover:bg-cyber-terminal transition-all duration-300"
-              style={{ 
-                boxShadow: '0 2px 8px rgba(0, 255, 204, 0.1)',
-                fontSize: '0.875rem'
-              }}
-            >
-              <Github size={18} className="mr-2" />
-              VIEW ON GITHUB
-            </button>
+            <div className="flex justify-center space-x-4">
+              <button
+                onClick={handleDocsClick}
+                className="cyber-button px-6 py-3 glow-on-hover flex items-center justify-center text-sm bg-cyber-card border border-cyber-accent hover:bg-cyber-terminal transition-all duration-300"
+                style={{ 
+                  boxShadow: '0 2px 8px rgba(0, 255, 204, 0.1)',
+                  fontSize: '0.875rem'
+                }}
+              >
+                <FileText size={18} className="mr-2" />
+                DOCS REFERENCE
+              </button>
+              <button
+                onClick={handleGitHubClick}
+                className="cyber-button px-6 py-3 glow-on-hover flex items-center justify-center text-sm bg-cyber-card border border-cyber-accent hover:bg-cyber-terminal transition-all duration-300"
+                style={{ 
+                  boxShadow: '0 2px 8px rgba(0, 255, 204, 0.1)',
+                  fontSize: '0.875rem'
+                }}
+              >
+                <Github size={18} className="mr-2" />
+                VIEW ON GITHUB
+              </button>
+            </div>
           </div>
         </div>
       </div>
