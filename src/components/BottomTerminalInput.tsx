@@ -84,37 +84,57 @@ const BottomTerminalInput = () => {
   return (
     <div className="fixed bottom-0 left-0 right-0 mb-8 z-20">
       <div className="max-w-4xl mx-auto px-4">
-        <div className="bg-cyber-terminal border border-cyber-border rounded-xl p-4 flex items-center space-x-4">
-          <div className="flex-1 relative">
-            <input
-              ref={inputRef}
-              type="text"
-              value={inputValue}
-              onChange={handleInputChange}
-              onFocus={handleInputFocus}
-              onBlur={handleInputBlur}
-              onKeyPress={handleKeyPress}
-              className="w-full bg-transparent border-none outline-none text-cyber-text font-mono text-sm"
-              placeholder=""
-              style={{ 
-                color: isUserTyping ? '#c0c0c0' : 'transparent',
-                caretColor: '#00FFCC'
-              }}
-            />
-            {!isUserTyping && (
-              <div className="absolute inset-0 flex items-center text-cyber-text font-mono text-sm pointer-events-none">
-                {displayedText}
-                <span className="ml-1 w-2 h-4 bg-cyber-accent"></span>
-              </div>
-            )}
+        <div className="bg-cyber-terminal border border-cyber-border rounded-xl overflow-hidden">
+          {/* Terminal Header with Icons */}
+          <div className="flex items-center justify-between bg-gray-800 px-4 py-2 border-b border-cyber-border">
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 rounded-full bg-red-500"></div>
+              <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+              <div className="w-3 h-3 rounded-full bg-green-500"></div>
+            </div>
+            <div className="text-xs text-gray-400">dassh-terminal</div>
           </div>
-          <button
-            onClick={handleSubmit}
-            className="bg-cyber-accent text-cyber-dark w-10 h-10 rounded-lg flex items-center justify-center hover:bg-opacity-80 transition-all duration-300"
-            disabled={!inputValue.trim()}
-          >
-            <ArrowUp size={18} />
-          </button>
+          
+          {/* Terminal Content */}
+          <div className="p-6 flex items-center space-x-4 h-20">
+            <span className="text-cyber-accent font-mono text-lg">$</span>
+            <div className="flex-1 relative">
+              <input
+                ref={inputRef}
+                type="text"
+                value={inputValue}
+                onChange={handleInputChange}
+                onFocus={handleInputFocus}
+                onBlur={handleInputBlur}
+                onKeyPress={handleKeyPress}
+                className="w-full bg-transparent border-none outline-none text-cyber-text font-mono text-sm"
+                placeholder=""
+                style={{ 
+                  color: isUserTyping ? '#c0c0c0' : 'transparent',
+                  caretColor: 'transparent'
+                }}
+              />
+              {!isUserTyping && (
+                <div className="absolute inset-0 flex items-center text-cyber-text font-mono text-sm pointer-events-none">
+                  {displayedText}
+                  <span className="ml-1 w-2 h-5 bg-cyber-accent"></span>
+                </div>
+              )}
+              {isUserTyping && (
+                <div className="absolute inset-0 flex items-center text-cyber-text font-mono text-sm pointer-events-none">
+                  {inputValue}
+                  <span className="ml-1 w-2 h-5 bg-cyber-accent"></span>
+                </div>
+              )}
+            </div>
+            <button
+              onClick={handleSubmit}
+              className="bg-cyber-accent text-cyber-dark w-12 h-12 rounded-lg flex items-center justify-center hover:bg-opacity-80 transition-all duration-300"
+              disabled={!inputValue.trim()}
+            >
+              <ArrowUp size={20} />
+            </button>
+          </div>
         </div>
       </div>
     </div>

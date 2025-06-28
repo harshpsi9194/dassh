@@ -82,12 +82,14 @@ const Index = () => {
         
         <div className={`mt-20 mb-32 text-center transition-opacity duration-700 ${loaded ? 'opacity-100' : 'opacity-0'}`}>
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 font-cyber">
-            <span className="text-cyber-accent cyber-glow-sm">Create Games</span>
-            <br />
-            <span className="text-cyber-accent cyber-glow-sm">With Just a Prompt</span>
+            <span className="text-cyber-accent cyber-glow-sm">Hi user, I am DASSH</span>
           </h2>
-          <p className="text-lg text-cyber-text max-w-2xl mx-auto mb-8">
-            Type a prompt, get a playable game instantly. No coding required.
+          <p className="text-lg text-cyber-text max-w-3xl mx-auto mb-8 leading-relaxed">
+            Welcome to the future of game development. I'm your AI-powered game creation assistant, 
+            designed to transform your wildest gaming ideas into playable experiences. Whether you're 
+            dreaming of retro arcade adventures, mind-bending puzzle platformers, or epic space odysseys, 
+            I can bring your vision to life instantly. Simply describe what you want to create, and 
+            I'll handle all the technical complexity behind the scenes.
           </p>
         </div>
       </div>
