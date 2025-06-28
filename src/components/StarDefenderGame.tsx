@@ -97,19 +97,19 @@ const StarDefenderGame = () => {
     };
 
     const drawSpaceship = () => {
-      ctx.fillStyle = 'rgba(102, 102, 102, 0.3)';
+      ctx.fillStyle = 'rgba(128, 128, 128, 0.4)';
       ctx.fillRect(gameState.spaceship.x, gameState.spaceship.y, gameState.spaceship.width, gameState.spaceship.height);
     };
 
     const drawEnemies = () => {
-      ctx.fillStyle = 'rgba(102, 102, 102, 0.25)';
+      ctx.fillStyle = 'rgba(128, 128, 128, 0.35)';
       gameState.enemies.forEach(enemy => {
         ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
       });
     };
 
     const drawMissiles = () => {
-      ctx.fillStyle = 'rgba(0, 255, 204, 0.1)';
+      ctx.fillStyle = 'rgba(0, 255, 204, 0.2)';
       gameState.missiles.forEach(missile => {
         ctx.fillRect(missile.x, missile.y, missile.width, missile.height);
       });
@@ -149,7 +149,7 @@ const StarDefenderGame = () => {
         width: '100%',
         height: '100%',
         zIndex: -1,
-        opacity: 0.12,
+        opacity: 0.35,
         pointerEvents: 'none',
       }}
     />

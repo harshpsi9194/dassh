@@ -2,13 +2,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
-import EnhancedTerminal from '@/components/EnhancedTerminal';
-import FeatureCard from '@/components/FeatureCard';
 import StarDefenderGame from '@/components/StarDefenderGame';
+import BottomTerminalInput from '@/components/BottomTerminalInput';
 import AuthModal from '@/components/AuthModal';
 import UserSidebar from '@/components/UserSidebar';
 import AboutPage from '@/components/AboutPage';
-import { MessageSquare, Code, Play } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 
 interface User {
@@ -82,44 +80,22 @@ const Index = () => {
           onAboutClick={handleAboutClick}
         />
         
-        <div className={`mt-20 mb-16 text-center transition-opacity duration-700 ${loaded ? 'opacity-100' : 'opacity-0'}`}>
+        <div className={`mt-20 mb-32 text-center transition-opacity duration-700 ${loaded ? 'opacity-100' : 'opacity-0'}`}>
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 font-cyber">
-            <span className="text-cyber-accent cyber-glow">Create Games</span>
+            <span className="text-cyber-accent cyber-glow-sm">Create Games</span>
             <br />
-            <span className="text-cyber-accent cyber-glow">With Just a Prompt</span>
+            <span className="text-cyber-accent cyber-glow-sm">With Just a Prompt</span>
           </h2>
           <p className="text-lg text-cyber-text max-w-2xl mx-auto mb-8">
             Type a prompt, get a playable game instantly. No coding required.
           </p>
         </div>
-        
-        <EnhancedTerminal />
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto mt-16 mb-16">
-          <FeatureCard 
-            icon={<MessageSquare size={28} className="text-cyber-accent" />}
-            title="Chat to Create"
-            description="Simply describe your game idea in natural language and watch it come to life"
-            delay="delay-100"
-          />
-          
-          <FeatureCard 
-            icon={<Code size={28} className="text-cyber-accent" />}
-            title="No Coding Required"
-            description="Create complex games without writing a single line of code"
-            delay="delay-300"
-          />
-          
-          <FeatureCard 
-            icon={<Play size={28} className="text-cyber-accent" />}
-            title="Instantly Playable"
-            description="Get a working game in seconds that you can play and share immediately"
-            delay="delay-500"
-          />
-        </div>
       </div>
+
+      {/* Bottom Terminal Input */}
+      <BottomTerminalInput />
       
-      <footer className="py-6 border-t border-cyber-border text-center text-sm text-cyber-muted relative z-10">
+      <footer className="py-6 border-t border-cyber-border text-center text-sm text-cyber-muted relative z-10 mb-20">
         <p>© 2025 DASSH. All rights reserved.</p>
         <p className="text-xs mt-1 text-cyber-accent">// INITIALIZING GAME ENGINE //</p>
       </footer>

@@ -71,15 +71,15 @@ export default {
 					gray: '#323848',
 				},
 				cyber: {
-					dark: '#0a0a0a',
-					card: '#11141f',
-					terminal: '#0f0f23',
+					dark: '#1f1f1f',
+					card: '#2a2a2a',
+					terminal: '#303030',
 					primary: '#00ff00',
 					secondary: '#cc00ff',
-					accent: '#00FFCC', // Updated to greenish-blue
-					text: '#f0f0f0',
-					muted: '#666666',
-					border: '#333333',
+					accent: '#00FFCC',
+					text: '#c0c0c0',
+					muted: '#808080',
+					border: '#404040',
 				}
 			},
 			borderRadius: {
@@ -117,8 +117,8 @@ export default {
 					'100%': { transform: 'translateY(0)', opacity: '1' }
 				},
 				'glow-pulse': {
-					'0%, 100%': { boxShadow: '0 0 5px currentColor' },
-					'50%': { boxShadow: '0 0 20px currentColor' }
+					'0%, 100%': { boxShadow: '0 2px 8px rgba(0, 255, 204, 0.2)' },
+					'50%': { boxShadow: '0 4px 16px rgba(0, 255, 204, 0.3)' }
 				}
 			},
 			animation: {

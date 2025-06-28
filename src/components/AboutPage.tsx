@@ -16,25 +16,25 @@ const AboutPage = ({ onBackClick }: AboutPageProps) => {
         {/* Back button */}
         <button
           onClick={onBackClick}
-          className="cyber-button mb-8 glow-on-hover"
+          className="cyber-button mb-8 glow-on-hover flex items-center"
         >
           <ArrowLeft size={18} className="mr-2" />
-          BACK TO MAIN
+          BACK TO HOME
         </button>
 
         <div className="space-y-12">
           {/* Header */}
           <div className="text-center">
             <h1 className="text-4xl md:text-5xl font-bold mb-6 font-cyber">
-              <span className="text-cyber-accent cyber-glow">About</span>
+              <span className="text-cyber-accent cyber-glow-sm">About</span>
               <br />
-              <span className="text-cyber-primary cyber-glow">DASSH</span>
+              <span className="text-cyber-primary cyber-glow-sm">DASSH</span>
             </h1>
           </div>
 
           {/* Purpose and Vision */}
           <div className="cyber-bg-card p-8 rounded-lg border border-cyber-border">
-            <h2 className="text-2xl font-bold text-cyber-accent mb-4 cyber-glow-sm">
+            <h2 className="text-2xl font-bold text-cyber-accent mb-4">
               Purpose & Vision
             </h2>
             <p className="text-cyber-text leading-relaxed mb-4">
@@ -47,7 +47,7 @@ const AboutPage = ({ onBackClick }: AboutPageProps) => {
 
           {/* Core Technologies */}
           <div className="cyber-bg-card p-8 rounded-lg border border-cyber-border">
-            <h2 className="text-2xl font-bold text-cyber-accent mb-6 cyber-glow-sm">
+            <h2 className="text-2xl font-bold text-cyber-accent mb-6">
               Core Technologies
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -92,7 +92,7 @@ const AboutPage = ({ onBackClick }: AboutPageProps) => {
 
           {/* GitHub Repository */}
           <div className="text-center">
-            <h2 className="text-2xl font-bold text-cyber-accent mb-6 cyber-glow-sm">
+            <h2 className="text-2xl font-bold text-cyber-accent mb-6">
               Open Source
             </h2>
             <p className="text-cyber-text mb-6 max-w-2xl mx-auto">
@@ -101,9 +101,9 @@ const AboutPage = ({ onBackClick }: AboutPageProps) => {
             </p>
             <button
               onClick={handleGitHubClick}
-              className="cyber-button text-lg px-8 py-3 glow-on-hover"
+              className="cyber-button px-8 py-3 glow-on-hover flex items-center justify-center mx-auto"
             >
-              <Github size={24} className="mr-3" />
+              <Github size={20} className="mr-3" />
               VIEW ON GITHUB
             </button>
           </div>
