@@ -12,17 +12,17 @@ const AboutPage = ({ onBackClick }: AboutPageProps) => {
 
   return (
     <div className="min-h-screen flex flex-col relative z-10">
-      <div className="flex-1 container mx-auto px-4 py-8 max-w-4xl">
-        {/* Back button */}
+      <div className="flex-1 container mx-auto px-0 py-8 max-w-4xl">
+        {/* Back button - extreme left */}
         <button
           onClick={onBackClick}
-          className="cyber-button mb-8 glow-on-hover flex items-center"
+          className="cyber-button mb-8 glow-on-hover flex items-center pl-0 ml-0"
         >
           <ArrowLeft size={18} className="mr-2" />
-          BACK TO HOME
+          Back to Home
         </button>
 
-        <div className="space-y-12">
+        <div className="space-y-12 px-4">
           {/* Header */}
           <div className="text-center">
             <h1 className="text-4xl md:text-5xl font-bold mb-6 font-cyber">
@@ -101,9 +101,13 @@ const AboutPage = ({ onBackClick }: AboutPageProps) => {
             </p>
             <button
               onClick={handleGitHubClick}
-              className="cyber-button px-8 py-3 glow-on-hover flex items-center justify-center mx-auto"
+              className="cyber-button px-6 py-3 glow-on-hover flex items-center justify-center mx-auto text-sm bg-cyber-card border border-cyber-accent hover:bg-cyber-terminal transition-all duration-300"
+              style={{ 
+                boxShadow: '0 2px 8px rgba(0, 255, 204, 0.1)',
+                fontSize: '0.875rem'
+              }}
             >
-              <Github size={20} className="mr-3" />
+              <Github size={18} className="mr-2" />
               VIEW ON GITHUB
             </button>
           </div>

@@ -94,11 +94,6 @@ const Index = () => {
 
       {/* Bottom Terminal Input */}
       <BottomTerminalInput />
-      
-      <footer className="py-6 border-t border-cyber-border text-center text-sm text-cyber-muted relative z-10 mb-20">
-        <p>© 2025 DASSH. All rights reserved.</p>
-        <p className="text-xs mt-1 text-cyber-accent">// INITIALIZING GAME ENGINE //</p>
-      </footer>
 
       {/* Auth Modal */}
       <AuthModal

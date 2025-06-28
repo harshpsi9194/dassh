@@ -20,10 +20,10 @@ const Header = ({ user, onLoginClick, onSidebarToggle, onAboutClick }: HeaderPro
   };
 
   return (
-    <header className="py-4 px-4 lg:px-8">
-      <div className="max-w-7xl mx-auto flex items-center justify-between">
-        {/* DASSH Logo in a box - moved to extreme left */}
-        <div className="flex items-center">
+    <header className="py-4 px-0">
+      <div className="w-full flex items-center justify-between">
+        {/* DASSH Logo in a box - extreme left */}
+        <div className="flex items-center pl-0">
           <div className="border border-cyber-accent rounded-md px-3 py-1">
             <h1 
               className="font-bold text-cyber-accent text-lg md:text-xl tracking-widest font-cyber"
@@ -34,43 +34,41 @@ const Header = ({ user, onLoginClick, onSidebarToggle, onAboutClick }: HeaderPro
           </div>
         </div>
 
-        {/* Right side - GitHub, About, Auth/User */}
-        <div className="flex items-center space-x-3">
-          {/* GitHub icon */}
-          <button
-            onClick={handleGitHubClick}
-            className="cyber-button-small glow-on-hover text-sm flex items-center"
-          >
-            <Github size={16} />
-          </button>
-
-          {/* About button */}
-          <button
-            onClick={onAboutClick}
-            className="cyber-button-small glow-on-hover text-sm"
-          >
-            ABOUT
-          </button>
-
+        {/* Right side - LOGIN, ABOUT, GitHub - extreme right with uniform sizing */}
+        <div className="flex items-center space-x-3 pr-0">
           {user ? (
             <button
               onClick={onSidebarToggle}
-              className="flex items-center space-x-2 cyber-button-small glow-on-hover text-sm"
+              className="flex items-center justify-center cyber-button-small glow-on-hover text-sm w-16 h-10"
             >
               <Menu size={16} />
-              <span className="hidden sm:inline">MENU</span>
+              <span className="hidden sm:inline ml-1">MENU</span>
             </button>
           ) : (
             <button
               onClick={onLoginClick}
-              className="cyber-button-small glow-on-hover text-sm"
+              className="cyber-button-small glow-on-hover text-sm w-16 h-10 flex items-center justify-center"
             >
-              <span className="flex items-center space-x-2">
-                <User size={16} />
-                <span>LOGIN</span>
-              </span>
+              <User size={16} />
+              <span className="hidden sm:inline ml-1">LOGIN</span>
             </button>
           )}
+
+          {/* About button */}
+          <button
+            onClick={onAboutClick}
+            className="cyber-button-small glow-on-hover text-sm w-16 h-10 flex items-center justify-center"
+          >
+            ABOUT
+          </button>
+
+          {/* GitHub icon */}
+          <button
+            onClick={handleGitHubClick}
+            className="cyber-button-small glow-on-hover text-sm w-16 h-10 flex items-center justify-center"
+          >
+            <Github size={16} />
+          </button>
         </div>
       </div>
     </header>

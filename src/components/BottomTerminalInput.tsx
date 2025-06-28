@@ -92,7 +92,7 @@ const BottomTerminalInput = () => {
   };
 
   return (
-    <div className="bottom-terminal">
+    <div className="bottom-terminal mb-8">
       <div className="max-w-4xl mx-auto">
         <div className="bottom-terminal-input flex items-center p-3">
           <span className="text-cyber-accent mr-3 font-mono">$</span>
