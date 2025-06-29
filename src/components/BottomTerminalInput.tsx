@@ -94,9 +94,9 @@ const BottomTerminalInput = () => {
             <div className="text-xs text-gray-400">dassh-terminal</div>
           </div>
           
-          {/* Terminal Content - Increased height */}
-          <div className="p-6 flex items-center space-x-4 h-28">
-            <span className="text-cyber-accent font-mono text-lg">$</span>
+          {/* Terminal Content - Increased height with top-aligned text */}
+          <div className="p-6 flex items-start space-x-4 h-28 pt-4">
+            <span className="text-cyber-accent font-mono text-lg mt-1">$</span>
             <div className="flex-1 relative">
               <input
                 ref={inputRef}
@@ -106,7 +106,7 @@ const BottomTerminalInput = () => {
                 onFocus={handleInputFocus}
                 onBlur={handleInputBlur}
                 onKeyPress={handleKeyPress}
-                className="w-full bg-transparent border-none outline-none text-cyber-text font-mono text-base py-2"
+                className="w-full bg-transparent border-none outline-none text-cyber-text font-mono text-sm py-1"
                 placeholder=""
                 style={{ 
                   color: isUserTyping ? '#c0c0c0' : 'transparent',
@@ -114,15 +114,15 @@ const BottomTerminalInput = () => {
                 }}
               />
               {!isUserTyping && (
-                <div className="absolute inset-0 flex items-center text-cyber-text font-mono text-base pointer-events-none">
+                <div className="absolute inset-0 flex items-start text-cyber-text font-mono text-sm pointer-events-none pt-1">
                   {displayedText}
-                  <span className="ml-1 w-2 h-6 bg-cyber-accent"></span>
+                  <span className="ml-1 w-2 h-5 bg-cyber-accent"></span>
                 </div>
               )}
               {isUserTyping && (
-                <div className="absolute inset-0 flex items-center text-cyber-text font-mono text-base pointer-events-none">
+                <div className="absolute inset-0 flex items-start text-cyber-text font-mono text-sm pointer-events-none pt-1">
                   {inputValue}
-                  <span className="ml-1 w-2 h-6 bg-cyber-accent"></span>
+                  <span className="ml-1 w-2 h-5 bg-cyber-accent"></span>
                 </div>
               )}
             </div>
