@@ -1,0 +1,280 @@
+import { useEffect, useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { auth } from '@/lib/supabase';
+import { useToast } from '@/hooks/use-toast';
+import ChatSidebar from '@/components/ChatSidebar';
+import ChatMessages from '@/components/ChatMessages';
+import ChatInput from '@/components/ChatInput';
+import { conversationService } from '@/lib/conversationService';
+import { llmService } from '@/lib/llmService';
+
+interface User {
+  email: string;
+  id: string;
+}
+
+interface Message {
+  id: string;
+  content: string;
+  role: 'user' | 'assistant';
+  timestamp: Date;
+}
+
+interface Conversation {
+  id: string;
+  title: string;
+  messages: Message[];
+  created_at: Date;
+  updated_at: Date;
+}
+
+const ChatInterface = () => {
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [currentConversation, setCurrentConversation] = useState<Conversation | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Check authentication
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const { data: { session } } = await auth.getSession();
+        if (!session?.user) {
+          navigate('/');
+          return;
+        }
+        
+        setUser({
+          email: session.user.email!,
+          id: session.user.id,
+        });
+        
+        // Load conversations
+        await loadConversations(session.user.id);
+      } catch (error) {
+        console.error('Auth check error:', error);
+        navigate('/');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuth();
+
+    // Listen for auth changes
+    const { data: { subscription } } = auth.onAuthStateChange((event, session) => {
+      if (!session?.user) {
+        navigate('/');
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [currentConversation?.messages]);
+
+  const loadConversations = async (userId: string) => {
+    try {
+      const userConversations = await conversationService.getUserConversations(userId);
+      setConversations(userConversations);
+      
+      // Set the most recent conversation as current if none selected
+      if (userConversations.length > 0 && !currentConversation) {
+        setCurrentConversation(userConversations[0]);
+      }
+    } catch (error) {
+      console.error('Error loading conversations:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load conversations",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const createNewConversation = async () => {
+    if (!user) return;
+
+    try {
+      const newConversation = await conversationService.createConversation(user.id, "New Chat");
+      setConversations(prev => [newConversation, ...prev]);
+      setCurrentConversation(newConversation);
+    } catch (error) {
+      console.error('Error creating conversation:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create new conversation",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const selectConversation = (conversation: Conversation) => {
+    setCurrentConversation(conversation);
+  };
+
+  const deleteConversation = async (conversationId: string) => {
+    try {
+      await conversationService.deleteConversation(conversationId);
+      setConversations(prev => prev.filter(c => c.id !== conversationId));
+      
+      if (currentConversation?.id === conversationId) {
+        const remaining = conversations.filter(c => c.id !== conversationId);
+        setCurrentConversation(remaining.length > 0 ? remaining[0] : null);
+      }
+      
+      toast({
+        title: "Success",
+        description: "Conversation deleted",
+      });
+    } catch (error) {
+      console.error('Error deleting conversation:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete conversation",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const sendMessage = async (content: string) => {
+    if (!user || !content.trim()) return;
+
+    try {
+      setIsGenerating(true);
+
+      // Create conversation if none exists
+      let conversation = currentConversation;
+      if (!conversation) {
+        conversation = await conversationService.createConversation(user.id, content.slice(0, 50) + "...");
+        setConversations(prev => [conversation!, ...prev]);
+        setCurrentConversation(conversation);
+      }
+
+      // Add user message
+      const userMessage: Message = {
+        id: Date.now().toString(),
+        content,
+        role: 'user',
+        timestamp: new Date(),
+      };
+
+      await conversationService.addMessage(conversation.id, userMessage);
+      
+      // Update local state
+      setCurrentConversation(prev => prev ? {
+        ...prev,
+        messages: [...prev.messages, userMessage]
+      } : null);
+
+      // Get AI response
+      const aiResponse = await llmService.generateResponse(content, conversation.messages);
+      
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        content: aiResponse,
+        role: 'assistant',
+        timestamp: new Date(),
+      };
+
+      await conversationService.addMessage(conversation.id, assistantMessage);
+      
+      // Update local state
+      setCurrentConversation(prev => prev ? {
+        ...prev,
+        messages: [...prev.messages, assistantMessage]
+      } : null);
+
+      // Update conversation title if it's the first message
+      if (conversation.messages.length === 0) {
+        const updatedTitle = content.slice(0, 50) + (content.length > 50 ? "..." : "");
+        await conversationService.updateConversationTitle(conversation.id, updatedTitle);
+        setConversations(prev => prev.map(c => 
+          c.id === conversation!.id ? { ...c, title: updatedTitle } : c
+        ));
+      }
+
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast({
+        title: "Error",
+        description: "Failed to send message. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await auth.signOut();
+      navigate('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to logout",
+        variant: "destructive",
+      });
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-cyber-dark">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyber-accent mx-auto mb-4"></div>
+          <p className="text-cyber-text">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex h-screen bg-cyber-dark">
+      {/* Sidebar */}
+      <ChatSidebar
+        user={user}
+        conversations={conversations}
+        currentConversation={currentConversation}
+        onNewConversation={createNewConversation}
+        onSelectConversation={selectConversation}
+        onDeleteConversation={deleteConversation}
+        onLogout={handleLogout}
+        collapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+      />
+
+      {/* Main Chat Area */}
+      <div className="flex-1 flex flex-col">
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto">
+          <ChatMessages 
+            messages={currentConversation?.messages || []}
+            isGenerating={isGenerating}
+          />
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Input */}
+        <div className="border-t border-cyber-border bg-cyber-card">
+          <ChatInput 
+            onSendMessage={sendMessage}
+            disabled={isGenerating}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ChatInterface;

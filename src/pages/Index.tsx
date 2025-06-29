@@ -2,9 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import StarDefenderGame from '@/components/StarDefenderGame';
-import BottomTerminalInput from '@/components/BottomTerminalInput';
 import AuthModal from '@/components/AuthModal';
-import UserSidebar from '@/components/UserSidebar';
 import AboutPage from '@/components/AboutPage';
 import { useToast } from "@/hooks/use-toast";
 import { auth } from '@/lib/supabase';
@@ -17,7 +15,6 @@ interface User {
 const Index = () => {
   const [loaded, setLoaded] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [showSidebar, setShowSidebar] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -43,6 +40,8 @@ const Index = () => {
             email: session.user.email!,
             id: session.user.id,
           });
+          // Redirect authenticated users to chat interface
+          navigate('/chat');
         }
       } catch (error) {
         console.error('Error checking session:', error);
@@ -61,6 +60,8 @@ const Index = () => {
             email: session.user.email!,
             id: session.user.id,
           });
+          // Redirect to chat interface after successful login
+          navigate('/chat');
         } else {
           setUser(null);
         }
@@ -69,7 +70,7 @@ const Index = () => {
     );
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [navigate]);
 
   const handleLoginSuccess = (userData: User) => {
     setUser(userData);
@@ -78,24 +79,7 @@ const Index = () => {
       title: "Welcome back!",
       description: `Logged in as ${userData.email}`,
     });
-  };
-
-  const handleLogout = async () => {
-    try {
-      await auth.signOut();
-      setUser(null);
-      setShowSidebar(false);
-      toast({
-        title: "Logged out",
-        description: "You have been successfully logged out",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: "Failed to log out. Please try again.",
-        variant: "destructive",
-      });
-    }
+    navigate('/chat');
   };
 
   const handleAboutClick = () => {
@@ -125,7 +109,7 @@ const Index = () => {
         <Header 
           user={user}
           onLoginClick={() => setShowAuthModal(true)}
-          onSidebarToggle={() => setShowSidebar(true)}
+          onSidebarToggle={() => {}}
           onAboutClick={handleAboutClick}
         />
         
@@ -134,31 +118,31 @@ const Index = () => {
             <span className="text-cyber-accent cyber-glow-sm">Hi user, I am DASSH</span>
           </h2>
           <p className="text-lg text-cyber-text max-w-3xl mx-auto mb-8 leading-relaxed">
-            Welcome to the future of game development. I'm your AI-powered game creation assistant, 
-            designed to transform your wildest gaming ideas into playable experiences. Whether you're 
-            dreaming of retro arcade adventures, mind-bending puzzle platformers, or epic space odysseys, 
-            I can bring your vision to life instantly. Simply describe what you want to create, and 
-            I'll handle all the technical complexity behind the scenes.
+            Welcome to the future of AI conversation. I'm your intelligent assistant, 
+            designed to help you with any questions, creative projects, or complex problems. 
+            Whether you're looking for detailed explanations, creative writing assistance, 
+            coding help, or just want to have an engaging conversation, I'm here to assist you 
+            with thoughtful and comprehensive responses.
           </p>
+          
+          {!user && (
+            <div className="mt-12">
+              <button
+                onClick={() => setShowAuthModal(true)}
+                className="cyber-button text-lg px-8 py-4 glow-on-hover"
+              >
+                Get Started - Sign In
+              </button>
+            </div>
+          )}
         </div>
       </div>
-
-      {/* Bottom Terminal Input */}
-      <BottomTerminalInput />
 
       {/* Auth Modal */}
       <AuthModal
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
         onLoginSuccess={handleLoginSuccess}
-      />
-
-      {/* User Sidebar */}
-      <UserSidebar
-        isOpen={showSidebar}
-        onClose={() => setShowSidebar(false)}
-        user={user}
-        onLogout={handleLogout}
       />
     </div>
   );
