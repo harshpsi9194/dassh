@@ -95,8 +95,10 @@ const BottomTerminalInput = () => {
           </div>
           
           {/* Terminal Content - Increased height with top-aligned text */}
-          <div className="p-6 flex items-start space-x-4 h-28 pt-4">
-            <span className="text-cyber-accent font-mono text-lg pt-1">$</span>
+          <div className="p-6 flex space-x-4 h-28">
+            <div className="flex items-start pt-1">
+              <span className="text-cyber-accent font-mono text-lg">$</span>
+            </div>
             <div className="flex-1 relative">
               <input
                 ref={inputRef}
@@ -106,7 +108,7 @@ const BottomTerminalInput = () => {
                 onFocus={handleInputFocus}
                 onBlur={handleInputBlur}
                 onKeyPress={handleKeyPress}
-                className="w-full bg-transparent border-none outline-none text-cyber-text font-mono text-sm py-1"
+                className="w-full bg-transparent border-none outline-none text-cyber-text font-mono text-sm pt-1"
                 placeholder=""
                 style={{ 
                   color: isUserTyping ? '#c0c0c0' : 'transparent',
@@ -126,13 +128,15 @@ const BottomTerminalInput = () => {
                 </div>
               )}
             </div>
-            <button
-              onClick={handleSubmit}
-              className="bg-cyber-accent text-cyber-dark w-14 h-14 rounded-lg flex items-center justify-center hover:bg-opacity-80 transition-all duration-300"
-              disabled={!inputValue.trim()}
-            >
-              <ArrowUp size={22} />
-            </button>
+            <div className="flex items-start pt-1">
+              <button
+                onClick={handleSubmit}
+                className="bg-cyber-accent text-cyber-dark w-10 h-10 rounded-lg flex items-center justify-center hover:bg-opacity-80 transition-all duration-300"
+                disabled={!inputValue.trim()}
+              >
+                <ArrowUp size={18} />
+              </button>
+            </div>
           </div>
         </div>
       </div>
