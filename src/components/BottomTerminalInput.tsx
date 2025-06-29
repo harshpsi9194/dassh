@@ -96,7 +96,7 @@ const BottomTerminalInput = () => {
           
           {/* Terminal Content - Increased height with top-aligned text */}
           <div className="p-6 flex items-start space-x-4 h-28 pt-4">
-            <span className="text-cyber-accent font-mono text-lg mt-1">$</span>
+            <span className="text-cyber-accent font-mono text-lg pt-1">$</span>
             <div className="flex-1 relative">
               <input
                 ref={inputRef}
