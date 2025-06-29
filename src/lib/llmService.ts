@@ -5,68 +5,26 @@ interface Message {
   timestamp: Date;
 }
 
-// Mock LLM service - replace with actual API integration
-export const llmService = {
-  async generateResponse(prompt: string, conversationHistory: Message[] = []): Promise<string> {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
+interface LLMProvider {
+  name: string;
+  generateResponse(prompt: string, conversationHistory: Message[]): Promise<string>;
+}
 
-    // Mock responses based on prompt content
-    const responses = [
-      "I understand your question. Let me provide you with a comprehensive response that addresses your specific needs and concerns.",
-      
-      "That's an interesting point you've raised. Based on the context of our conversation, I can offer several perspectives on this topic.",
-      
-      "I'd be happy to help you with that. Here's a detailed explanation that should clarify the concepts you're asking about.",
-      
-      "Thank you for that question. Let me break this down into manageable parts to give you the most useful information.",
-      
-      "I can see why you might be curious about this. Let me provide you with some insights and practical guidance on this matter.",
-      
-      "That's a great question that touches on several important aspects. I'll walk you through the key points you should consider.",
-      
-      "I appreciate you bringing this up. Based on current best practices and available information, here's what I recommend.",
-      
-      "This is definitely worth exploring further. Let me share some thoughts and suggestions that might be helpful for your situation.",
-    ];
+class OpenAIProvider implements LLMProvider {
+  name = 'OpenAI GPT';
+  private apiKey: string;
 
-    // Simple keyword-based response selection
-    const lowerPrompt = prompt.toLowerCase();
-    
-    if (lowerPrompt.includes('code') || lowerPrompt.includes('programming')) {
-      return "I'd be happy to help you with coding! Here's a solution that addresses your programming question:\n\n```javascript\n// Example code structure\nfunction example() {\n  console.log('This is a sample response');\n}\n```\n\nThis approach should work well for your use case. Let me know if you need any clarification or have additional questions!";
-    }
-    
-    if (lowerPrompt.includes('explain') || lowerPrompt.includes('what is')) {
-      return "Let me explain this concept clearly:\n\n1. **Definition**: This refers to the fundamental principles and core concepts\n2. **Key Components**: The main elements that make up this topic\n3. **Practical Applications**: How this applies in real-world scenarios\n4. **Important Considerations**: Things to keep in mind when working with this\n\nWould you like me to elaborate on any of these points?";
-    }
-    
-    if (lowerPrompt.includes('help') || lowerPrompt.includes('how to')) {
-      return "I'm here to help! Here's a step-by-step approach to address your question:\n\n**Step 1**: Start by understanding the core requirements\n**Step 2**: Gather the necessary resources and information\n**Step 3**: Implement the solution systematically\n**Step 4**: Test and refine your approach\n**Step 5**: Document your process for future reference\n\nFeel free to ask for more specific guidance on any of these steps!";
-    }
-
-    // Return a random response for general queries
-    const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-    
-    // Add some context if there's conversation history
-    if (conversationHistory.length > 0) {
-      return `${randomResponse}\n\nBuilding on our previous discussion, I want to make sure this information connects well with what we've already covered. Is there a particular aspect you'd like me to focus on more?`;
-    }
-    
-    return randomResponse;
+  constructor(apiKey: string) {
+    this.apiKey = apiKey;
   }
-};
 
-// TODO: Replace with actual LLM API integration
-// Example integration with OpenAI GPT or Google Gemini:
-/*
-export const llmService = {
   async generateResponse(prompt: string, conversationHistory: Message[] = []): Promise<string> {
-    const apiKey = import.meta.env.VITE_OPENAI_API_KEY; // or VITE_GEMINI_API_KEY
-    
     const messages = [
-      { role: 'system', content: 'You are DASSH, a helpful AI assistant.' },
-      ...conversationHistory.map(msg => ({
+      { 
+        role: 'system', 
+        content: 'You are DASSH, a helpful AI assistant. Provide clear, comprehensive, and engaging responses. Be conversational but informative.' 
+      },
+      ...conversationHistory.slice(-10).map(msg => ({
         role: msg.role,
         content: msg.content
       })),
@@ -76,19 +34,213 @@ export const llmService = {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
+        'Authorization': `Bearer ${this.apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         model: 'gpt-3.5-turbo',
         messages,
-        max_tokens: 1000,
+        max_tokens: 1500,
         temperature: 0.7,
+        presence_penalty: 0.1,
+        frequency_penalty: 0.1,
       }),
     });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(`OpenAI API error: ${response.status} - ${errorData.error?.message || response.statusText}`);
+    }
 
     const data = await response.json();
     return data.choices[0].message.content;
   }
+}
+
+class GeminiProvider implements LLMProvider {
+  name = 'Google Gemini';
+  private apiKey: string;
+
+  constructor(apiKey: string) {
+    this.apiKey = apiKey;
+  }
+
+  async generateResponse(prompt: string, conversationHistory: Message[] = []): Promise<string> {
+    // Build conversation context for Gemini
+    let contextPrompt = 'You are DASSH, a helpful AI assistant. Provide clear, comprehensive, and engaging responses. Be conversational but informative.\n\n';
+    
+    if (conversationHistory.length > 0) {
+      contextPrompt += 'Previous conversation context:\n';
+      conversationHistory.slice(-8).forEach(msg => {
+        contextPrompt += `${msg.role === 'user' ? 'Human' : 'Assistant'}: ${msg.content}\n`;
+      });
+      contextPrompt += '\n';
+    }
+    
+    contextPrompt += `Human: ${prompt}\nAssistant:`;
+
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${this.apiKey}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{
+            text: contextPrompt
+          }]
+        }],
+        generationConfig: {
+          temperature: 0.7,
+          topK: 40,
+          topP: 0.95,
+          maxOutputTokens: 1500,
+          stopSequences: ['Human:', 'User:']
+        },
+        safetySettings: [
+          {
+            category: 'HARM_CATEGORY_HARASSMENT',
+            threshold: 'BLOCK_MEDIUM_AND_ABOVE'
+          },
+          {
+            category: 'HARM_CATEGORY_HATE_SPEECH',
+            threshold: 'BLOCK_MEDIUM_AND_ABOVE'
+          },
+          {
+            category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
+            threshold: 'BLOCK_MEDIUM_AND_ABOVE'
+          },
+          {
+            category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
+            threshold: 'BLOCK_MEDIUM_AND_ABOVE'
+          }
+        ]
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(`Gemini API error: ${response.status} - ${errorData.error?.message || response.statusText}`);
+    }
+
+    const data = await response.json();
+    
+    if (!data.candidates || data.candidates.length === 0) {
+      throw new Error('No response generated from Gemini API');
+    }
+
+    const candidate = data.candidates[0];
+    if (candidate.finishReason === 'SAFETY') {
+      throw new Error('Response blocked by safety filters');
+    }
+
+    return candidate.content.parts[0].text;
+  }
+}
+
+class LLMService {
+  private providers: LLMProvider[] = [];
+  private currentProviderIndex = 0;
+
+  constructor() {
+    this.initializeProviders();
+  }
+
+  private initializeProviders() {
+    const geminiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    const openaiKey = import.meta.env.VITE_OPENAI_API_KEY;
+    const preferredProvider = import.meta.env.VITE_LLM_PROVIDER || 'auto';
+
+    // Initialize available providers
+    if (geminiKey) {
+      this.providers.push(new GeminiProvider(geminiKey));
+    }
+    
+    if (openaiKey) {
+      this.providers.push(new OpenAIProvider(openaiKey));
+    }
+
+    // Set preferred provider if specified
+    if (preferredProvider !== 'auto') {
+      const preferredIndex = this.providers.findIndex(p => 
+        p.name.toLowerCase().includes(preferredProvider.toLowerCase())
+      );
+      if (preferredIndex !== -1) {
+        this.currentProviderIndex = preferredIndex;
+      }
+    }
+
+    if (this.providers.length === 0) {
+      console.warn('No LLM providers configured. Using fallback responses.');
+    }
+  }
+
+  async generateResponse(prompt: string, conversationHistory: Message[] = []): Promise<string> {
+    if (this.providers.length === 0) {
+      return this.getFallbackResponse(prompt);
+    }
+
+    // Try each provider in order until one succeeds
+    for (let attempt = 0; attempt < this.providers.length; attempt++) {
+      const provider = this.providers[this.currentProviderIndex];
+      
+      try {
+        console.log(`Generating response using ${provider.name}...`);
+        const response = await provider.generateResponse(prompt, conversationHistory);
+        
+        // Success! Return the response
+        return response;
+        
+      } catch (error) {
+        console.error(`Error with ${provider.name}:`, error);
+        
+        // Try next provider
+        this.currentProviderIndex = (this.currentProviderIndex + 1) % this.providers.length;
+        
+        // If this was the last provider, throw the error
+        if (attempt === this.providers.length - 1) {
+          throw new Error(`All LLM providers failed. Last error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+      }
+    }
+
+    // Fallback if all providers fail
+    return this.getFallbackResponse(prompt);
+  }
+
+  private getFallbackResponse(prompt: string): string {
+    const fallbackResponses = [
+      "I apologize, but I'm experiencing some technical difficulties right now. Please try again in a moment.",
+      
+      "I'm currently unable to process your request due to a temporary service issue. Please try again shortly.",
+      
+      "There seems to be a connectivity issue with my AI services. Your message is important to me, so please try again in a few moments.",
+      
+      "I'm experiencing some technical challenges at the moment. Please bear with me and try your request again.",
+    ];
+
+    const randomResponse = fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)];
+    
+    return `${randomResponse}\n\nYour message: "${prompt.slice(0, 100)}${prompt.length > 100 ? '...' : ''}"`;
+  }
+
+  // Get current provider info for debugging
+  getCurrentProvider(): string {
+    if (this.providers.length === 0) return 'No providers available';
+    return this.providers[this.currentProviderIndex].name;
+  }
+
+  // Get all available providers
+  getAvailableProviders(): string[] {
+    return this.providers.map(p => p.name);
+  }
+}
+
+// Export singleton instance
+export const llmService = new LLMService();
+
+// Export for debugging
+export const debugLLM = {
+  getCurrentProvider: () => llmService.getCurrentProvider(),
+  getAvailableProviders: () => llmService.getAvailableProviders(),
 };
-*/

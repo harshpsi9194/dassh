@@ -169,37 +169,63 @@ const ChatInterface = () => {
 
       await conversationService.addMessage(conversation.id, userMessage);
       
-      // Update local state
+      // Update local state immediately for better UX
       setCurrentConversation(prev => prev ? {
         ...prev,
         messages: [...prev.messages, userMessage]
       } : null);
 
       // Get AI response
-      const aiResponse = await llmService.generateResponse(content, conversation.messages);
-      
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: aiResponse,
-        role: 'assistant',
-        timestamp: new Date(),
-      };
+      try {
+        const aiResponse = await llmService.generateResponse(content, conversation.messages);
+        
+        const assistantMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          content: aiResponse,
+          role: 'assistant',
+          timestamp: new Date(),
+        };
 
-      await conversationService.addMessage(conversation.id, assistantMessage);
-      
-      // Update local state
-      setCurrentConversation(prev => prev ? {
-        ...prev,
-        messages: [...prev.messages, assistantMessage]
-      } : null);
+        await conversationService.addMessage(conversation.id, assistantMessage);
+        
+        // Update local state
+        setCurrentConversation(prev => prev ? {
+          ...prev,
+          messages: [...prev.messages, assistantMessage]
+        } : null);
 
-      // Update conversation title if it's the first message
-      if (conversation.messages.length === 0) {
-        const updatedTitle = content.slice(0, 50) + (content.length > 50 ? "..." : "");
-        await conversationService.updateConversationTitle(conversation.id, updatedTitle);
-        setConversations(prev => prev.map(c => 
-          c.id === conversation!.id ? { ...c, title: updatedTitle } : c
-        ));
+        // Update conversation title if it's the first message
+        if (conversation.messages.length === 0) {
+          const updatedTitle = content.slice(0, 50) + (content.length > 50 ? "..." : "");
+          await conversationService.updateConversationTitle(conversation.id, updatedTitle);
+          setConversations(prev => prev.map(c => 
+            c.id === conversation!.id ? { ...c, title: updatedTitle } : c
+          ));
+        }
+
+      } catch (aiError) {
+        console.error('AI response error:', aiError);
+        
+        // Add error message to conversation
+        const errorMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          content: `I apologize, but I encountered an error while generating a response: ${aiError instanceof Error ? aiError.message : 'Unknown error'}. Please try again.`,
+          role: 'assistant',
+          timestamp: new Date(),
+        };
+
+        await conversationService.addMessage(conversation.id, errorMessage);
+        
+        setCurrentConversation(prev => prev ? {
+          ...prev,
+          messages: [...prev.messages, errorMessage]
+        } : null);
+
+        toast({
+          title: "AI Response Error",
+          description: "There was an issue generating the AI response. Please try again.",
+          variant: "destructive",
+        });
       }
 
     } catch (error) {
@@ -233,7 +259,7 @@ const ChatInterface = () => {
       <div className="min-h-screen flex items-center justify-center bg-cyber-dark">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyber-accent mx-auto mb-4"></div>
-          <p className="text-cyber-text">Loading...</p>
+          <p className="text-cyber-text">Loading DASSH...</p>
         </div>
       </div>
     );

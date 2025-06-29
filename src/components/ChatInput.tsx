@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Paperclip } from 'lucide-react';
+import { Send, Paperclip, Zap } from 'lucide-react';
+import { debugLLM } from '@/lib/llmService';
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
@@ -8,6 +9,7 @@ interface ChatInputProps {
 
 const ChatInput = ({ onSendMessage, disabled = false }: ChatInputProps) => {
   const [message, setMessage] = useState('');
+  const [showDebugInfo, setShowDebugInfo] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Auto-resize textarea
@@ -34,17 +36,21 @@ const ChatInput = ({ onSendMessage, disabled = false }: ChatInputProps) => {
     }
   };
 
+  const currentProvider = debugLLM.getCurrentProvider();
+  const availableProviders = debugLLM.getAvailableProviders();
+
   return (
     <div className="p-4">
       <form onSubmit={handleSubmit} className="relative">
         <div className="flex items-end space-x-3">
-          {/* Attachment button (placeholder) */}
+          {/* AI Provider indicator */}
           <button
             type="button"
+            onClick={() => setShowDebugInfo(!showDebugInfo)}
             className="p-3 text-cyber-muted hover:text-cyber-accent transition-colors rounded-lg hover:bg-cyber-terminal"
-            title="Attach file (coming soon)"
+            title={`Current AI: ${currentProvider}`}
           >
-            <Paperclip size={20} />
+            <Zap size={20} />
           </button>
 
           {/* Message input */}
@@ -75,11 +81,18 @@ const ChatInput = ({ onSendMessage, disabled = false }: ChatInputProps) => {
           </div>
         </div>
         
-        {/* Character count and tips */}
+        {/* Debug info and tips */}
         <div className="flex justify-between items-center mt-2 text-xs text-cyber-muted">
-          <span>
-            {message.length > 0 && `${message.length} characters`}
-          </span>
+          <div className="flex items-center space-x-4">
+            {showDebugInfo && (
+              <span className="text-cyber-accent">
+                AI: {currentProvider} ({availableProviders.length} available)
+              </span>
+            )}
+            {message.length > 0 && (
+              <span>{message.length} characters</span>
+            )}
+          </div>
           <span>
             Press Shift+Enter for new line
           </span>
