@@ -1,4 +1,3 @@
-
 import { Menu, User } from 'lucide-react';
 
 interface User {
@@ -15,22 +14,22 @@ interface HeaderProps {
 
 const Header = ({ user, onLoginClick, onSidebarToggle, onAboutClick }: HeaderProps) => {
   return (
-    <header className="py-4 px-0">
-      <div className="w-full flex items-center justify-between">
+    // Use fixed positioning to ensure it spans the full screen width
+    <header className="py-4 fixed top-0 left-0 right-0 w-full z-50 bg-transparent">
+      {/* Minimal padding to touch screen edges */}
+      <div className="w-full flex items-center justify-between px-2">
         {/* DASSH Logo in a box - extreme left */}
-        <div className="flex items-center pl-0">
-          <div className="border border-cyber-accent rounded-md px-3 py-1">
-            <h1 
-              className="font-bold text-cyber-accent text-lg md:text-xl tracking-widest font-cyber"
-              style={{ letterSpacing: '0.2em' }}
-            >
-              DASSH
-            </h1>
-          </div>
+        <div className="border border-cyber-accent rounded-md">
+          <h1
+            className="font-bold text-cyber-accent text-lg md:text-xl tracking-widest font-cyber px-2 py-1"
+            style={{ letterSpacing: '0.2em' }}
+          >
+            DASSH
+          </h1>
         </div>
 
-        {/* Right side - LOGIN, ABOUT - extreme right with uniform sizing */}
-        <div className="flex items-center space-x-3 pr-0">
+        {/* Right side - LOGIN/MENU and ABOUT - extreme right */}
+        <div className="flex items-center space-x-3">
           {user ? (
             <button
               onClick={onSidebarToggle}
