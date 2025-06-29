@@ -95,8 +95,13 @@ const Index = () => {
     if (user) {
       navigate('/chat');
     } else {
+      // For "Start Creating", redirect to signup/login
       setShowAuthModal(true);
     }
+  };
+
+  const handleLoginClick = () => {
+    setShowAuthModal(true);
   };
 
   if (showAbout) {
@@ -117,7 +122,7 @@ const Index = () => {
       <div className="flex-1 container mx-auto px-4 py-8 max-w-6xl relative z-10">
         <Header 
           user={user}
-          onLoginClick={() => setShowAuthModal(true)}
+          onLoginClick={handleLoginClick}
           onSidebarToggle={() => {}}
           onAboutClick={handleAboutClick}
         />
@@ -135,12 +140,29 @@ const Index = () => {
           </p>
           
           <div className="mt-12 space-y-4">
-            <button
-              onClick={handleChatClick}
-              className="cyber-button text-lg px-8 py-4 glow-on-hover mr-4"
-            >
-              {user ? 'Continue to Chat' : 'Get Started - Sign In'}
-            </button>
+            {user ? (
+              <button
+                onClick={handleChatClick}
+                className="cyber-button text-lg px-8 py-4 glow-on-hover"
+              >
+                Continue to Chat
+              </button>
+            ) : (
+              <div className="space-y-4">
+                <button
+                  onClick={handleChatClick}
+                  className="cyber-button text-lg px-8 py-4 glow-on-hover block mx-auto"
+                >
+                  Start Creating
+                </button>
+                <button
+                  onClick={handleLoginClick}
+                  className="cyber-button-secondary text-base px-6 py-3 block mx-auto"
+                >
+                  Already have an account? Login
+                </button>
+              </div>
+            )}
             
             {user && (
               <div className="text-cyber-muted">

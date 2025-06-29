@@ -1,4 +1,5 @@
-import { Menu, User } from 'lucide-react';
+
+import { User } from 'lucide-react';
 
 interface User {
   email: string;
@@ -28,27 +29,8 @@ const Header = ({ user, onLoginClick, onSidebarToggle, onAboutClick }: HeaderPro
           </h1>
         </div>
 
-        {/* Right side - LOGIN/MENU and ABOUT - extreme right */}
+        {/* Right side - Only ABOUT button */}
         <div className="flex items-center space-x-3">
-          {user ? (
-            <button
-              onClick={onSidebarToggle}
-              className="flex items-center justify-center cyber-button-small glow-on-hover text-sm w-16 h-10"
-            >
-              <Menu size={16} />
-              <span className="hidden sm:inline ml-1">MENU</span>
-            </button>
-          ) : (
-            <button
-              onClick={onLoginClick}
-              className="cyber-button-small glow-on-hover text-sm w-16 h-10 flex items-center justify-center"
-            >
-              <User size={16} />
-              <span className="hidden sm:inline ml-1">LOGIN</span>
-            </button>
-          )}
-
-          {/* About button */}
           <button
             onClick={onAboutClick}
             className="cyber-button-small glow-on-hover text-sm w-16 h-10 flex items-center justify-center"
