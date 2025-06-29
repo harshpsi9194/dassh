@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -8,6 +7,7 @@ import AuthModal from '@/components/AuthModal';
 import UserSidebar from '@/components/UserSidebar';
 import AboutPage from '@/components/AboutPage';
 import { useToast } from "@/hooks/use-toast";
+import { auth } from '@/lib/supabase';
 
 interface User {
   email: string;
@@ -20,6 +20,7 @@ const Index = () => {
   const [showSidebar, setShowSidebar] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -31,6 +32,45 @@ const Index = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  // Handle authentication state
+  useEffect(() => {
+    // Check for existing session
+    const checkSession = async () => {
+      try {
+        const { data: { session } } = await auth.getSession();
+        if (session?.user) {
+          setUser({
+            email: session.user.email!,
+            id: session.user.id,
+          });
+        }
+      } catch (error) {
+        console.error('Error checking session:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkSession();
+
+    // Listen for auth changes
+    const { data: { subscription } } = auth.onAuthStateChange(
+      (event, session) => {
+        if (session?.user) {
+          setUser({
+            email: session.user.email!,
+            id: session.user.id,
+          });
+        } else {
+          setUser(null);
+        }
+        setIsLoading(false);
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   const handleLoginSuccess = (userData: User) => {
     setUser(userData);
     setShowAuthModal(false);
@@ -40,13 +80,22 @@ const Index = () => {
     });
   };
 
-  const handleLogout = () => {
-    setUser(null);
-    setShowSidebar(false);
-    toast({
-      title: "Logged out",
-      description: "You have been successfully logged out",
-    });
+  const handleLogout = async () => {
+    try {
+      await auth.signOut();
+      setUser(null);
+      setShowSidebar(false);
+      toast({
+        title: "Logged out",
+        description: "You have been successfully logged out",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to log out. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleAboutClick = () => {

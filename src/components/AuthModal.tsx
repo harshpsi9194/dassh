@@ -1,7 +1,7 @@
-
 import { useState } from 'react';
 import { X } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import { auth } from '@/lib/supabase';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -65,26 +65,42 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }: AuthModalProps) => {
     setIsLoading(true);
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      const mockUser = {
-        email: formData.email,
-        id: Date.now().toString(),
-      };
-
-      toast({
-        title: "Success!",
-        description: `Successfully ${activeTab === 'login' ? 'logged in' : 'signed up'}`,
-      });
-
-      onLoginSuccess(mockUser);
-      onClose();
-      
-      setFormData({ email: '', password: '', confirmPassword: '' });
-    } catch (error) {
+      if (activeTab === 'login') {
+        const { data, error } = await auth.signIn(formData.email, formData.password);
+        
+        if (error) throw error;
+        
+        if (data.user) {
+          onLoginSuccess({
+            email: data.user.email!,
+            id: data.user.id,
+          });
+          
+          toast({
+            title: "Success!",
+            description: "Successfully logged in",
+          });
+          
+          onClose();
+          setFormData({ email: '', password: '', confirmPassword: '' });
+        }
+      } else {
+        const { data, error } = await auth.signUp(formData.email, formData.password);
+        
+        if (error) throw error;
+        
+        toast({
+          title: "Success!",
+          description: "Account created! Please check your email to confirm your account.",
+        });
+        
+        onClose();
+        setFormData({ email: '', password: '', confirmPassword: '' });
+      }
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Authentication failed. Please try again.",
+        description: error.message || "Authentication failed. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -92,11 +108,24 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }: AuthModalProps) => {
     }
   };
 
-  const handleSocialLogin = (provider: 'google' | 'github') => {
-    toast({
-      title: "Coming Soon",
-      description: `${provider === 'google' ? 'Google' : 'GitHub'} authentication will be available soon`,
-    });
+  const handleSocialLogin = async (provider: 'google' | 'github') => {
+    try {
+      const { error } = await auth.signInWithOAuth(provider);
+      
+      if (error) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Social login failed. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   if (!isOpen) return null;
@@ -233,10 +262,6 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }: AuthModalProps) => {
             {isLoading ? 'PROCESSING...' : (activeTab === 'login' ? 'ACCESS SYSTEM' : 'CREATE ACCOUNT')}
           </button>
         </form>
-
-        <div className="mt-4 text-center text-xs text-cyber-muted">
-          <p>// Demo mode - authentication is simulated</p>
-        </div>
       </div>
     </div>
   );

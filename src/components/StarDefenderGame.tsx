@@ -39,7 +39,7 @@ const StarDefenderGame = () => {
     explosions: [] as Explosion[],
     gameSpeed: 1,
     lastMissileTime: 0,
-    missileInterval: 150, // Slightly slower missile firing
+    missileInterval: 150,
   });
 
   useEffect(() => {
@@ -58,13 +58,13 @@ const StarDefenderGame = () => {
     window.addEventListener('resize', resizeCanvas);
 
     const gameState = gameStateRef.current;
-    gameState.spaceship.x = canvas.width / 2 - gameState.spaceship.width / 2;
+    // Fix spaceship Y position - only moves horizontally
     gameState.spaceship.y = canvas.height - 120;
-    gameState.spaceship.targetX = gameState.spaceship.x;
     gameState.spaceship.targetY = gameState.spaceship.y;
+    gameState.spaceship.x = canvas.width / 2 - gameState.spaceship.width / 2;
+    gameState.spaceship.targetX = gameState.spaceship.x;
 
     const spawnEnemy = () => {
-      // Reduced spawn rate for fewer enemies
       if (Math.random() < 0.004) {
         const enemy: Enemy = {
           x: Math.random() * (canvas.width - 20),
@@ -78,27 +78,39 @@ const StarDefenderGame = () => {
       }
     };
 
-    const findNearestEnemy = () => {
+    const findBestTargetEnemy = () => {
       if (gameState.enemies.length === 0) return null;
       
-      let nearestEnemy = gameState.enemies[0];
-      let minDistance = Math.sqrt(
-        Math.pow(nearestEnemy.x - gameState.spaceship.x, 2) + 
-        Math.pow(nearestEnemy.y - gameState.spaceship.y, 2)
-      );
+      // Find enemies that are closest and in a threatening position
+      let bestEnemy = null;
+      let bestScore = -1;
 
       gameState.enemies.forEach(enemy => {
-        const distance = Math.sqrt(
-          Math.pow(enemy.x - gameState.spaceship.x, 2) + 
-          Math.pow(enemy.y - gameState.spaceship.y, 2)
-        );
-        if (distance < minDistance) {
-          minDistance = distance;
-          nearestEnemy = enemy;
+        // Calculate how long it would take for enemy to reach bottom
+        const timeToBottom = (canvas.height - enemy.y) / enemy.dy;
+        
+        // Calculate how long it would take for a missile to reach the enemy
+        const missileSpeed = 4; // missile dy speed
+        const timeToHitEnemy = (enemy.y - gameState.spaceship.y) / missileSpeed;
+        
+        // Prioritize enemies that:
+        // 1. Are closer to the bottom (more threatening)
+        // 2. Can actually be hit by our missiles
+        // 3. Are within reasonable horizontal distance
+        const threat = 1 / Math.max(timeToBottom, 1); // Higher threat = closer to bottom
+        const canHit = timeToHitEnemy > 0 && timeToHitEnemy < timeToBottom ? 1 : 0.1;
+        const horizontalDistance = Math.abs(enemy.x - gameState.spaceship.x);
+        const proximity = 1 / Math.max(horizontalDistance / 100, 1); // Prefer closer enemies horizontally
+        
+        const score = threat * canHit * proximity;
+        
+        if (score > bestScore) {
+          bestScore = score;
+          bestEnemy = enemy;
         }
       });
 
-      return nearestEnemy;
+      return bestEnemy;
     };
 
     const spawnMissile = (currentTime: number) => {
@@ -142,33 +154,35 @@ const StarDefenderGame = () => {
     };
 
     const updateSpaceship = () => {
-      const nearestEnemy = findNearestEnemy();
+      const targetEnemy = findBestTargetEnemy();
       
-      if (nearestEnemy) {
-        // Move towards the nearest enemy
-        gameState.spaceship.targetX = nearestEnemy.x;
-        gameState.spaceship.targetY = Math.min(gameState.spaceship.y, nearestEnemy.y + 50);
+      if (targetEnemy) {
+        // Move horizontally to align with the target enemy
+        // Predict where the enemy will be when our missile reaches it
+        const missileSpeed = 4;
+        const timeToReach = (targetEnemy.y - gameState.spaceship.y) / missileSpeed;
+        const predictedEnemyX = targetEnemy.x + (targetEnemy.dx || 0) * timeToReach;
+        
+        // Aim for the center of the predicted enemy position
+        gameState.spaceship.targetX = predictedEnemyX - gameState.spaceship.width / 2;
       } else {
         // Return to center if no enemies
         gameState.spaceship.targetX = canvas.width / 2 - gameState.spaceship.width / 2;
-        gameState.spaceship.targetY = canvas.height - 120;
       }
 
-      // Smooth movement towards target
-      const moveSpeed = 1.5;
+      // Only move horizontally - Y position stays fixed
+      const moveSpeed = 2.5; // Increased speed for more responsive movement
       const dx = gameState.spaceship.targetX - gameState.spaceship.x;
-      const dy = gameState.spaceship.targetY - gameState.spaceship.y;
       
       if (Math.abs(dx) > 1) {
         gameState.spaceship.x += dx > 0 ? moveSpeed : -moveSpeed;
       }
-      if (Math.abs(dy) > 1) {
-        gameState.spaceship.y += dy > 0 ? moveSpeed : -moveSpeed;
-      }
 
-      // Keep spaceship within bounds
+      // Keep spaceship within horizontal bounds only
       gameState.spaceship.x = Math.max(0, Math.min(canvas.width - gameState.spaceship.width, gameState.spaceship.x));
-      gameState.spaceship.y = Math.max(0, Math.min(canvas.height - gameState.spaceship.height, gameState.spaceship.y));
+      
+      // Ensure Y position remains fixed
+      gameState.spaceship.y = canvas.height - 120;
     };
 
     const updateEnemies = () => {
