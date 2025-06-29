@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useRef } from 'react';
 import { ArrowUp } from 'lucide-react';
 
@@ -95,8 +94,8 @@ const BottomTerminalInput = () => {
             <div className="text-xs text-gray-400">dassh-terminal</div>
           </div>
           
-          {/* Terminal Content */}
-          <div className="p-6 flex items-center space-x-4 h-20">
+          {/* Terminal Content - Increased height */}
+          <div className="p-6 flex items-center space-x-4 h-28">
             <span className="text-cyber-accent font-mono text-lg">$</span>
             <div className="flex-1 relative">
               <input
@@ -107,7 +106,7 @@ const BottomTerminalInput = () => {
                 onFocus={handleInputFocus}
                 onBlur={handleInputBlur}
                 onKeyPress={handleKeyPress}
-                className="w-full bg-transparent border-none outline-none text-cyber-text font-mono text-sm"
+                className="w-full bg-transparent border-none outline-none text-cyber-text font-mono text-base py-2"
                 placeholder=""
                 style={{ 
                   color: isUserTyping ? '#c0c0c0' : 'transparent',
@@ -115,24 +114,24 @@ const BottomTerminalInput = () => {
                 }}
               />
               {!isUserTyping && (
-                <div className="absolute inset-0 flex items-center text-cyber-text font-mono text-sm pointer-events-none">
+                <div className="absolute inset-0 flex items-center text-cyber-text font-mono text-base pointer-events-none">
                   {displayedText}
-                  <span className="ml-1 w-2 h-5 bg-cyber-accent"></span>
+                  <span className="ml-1 w-2 h-6 bg-cyber-accent"></span>
                 </div>
               )}
               {isUserTyping && (
-                <div className="absolute inset-0 flex items-center text-cyber-text font-mono text-sm pointer-events-none">
+                <div className="absolute inset-0 flex items-center text-cyber-text font-mono text-base pointer-events-none">
                   {inputValue}
-                  <span className="ml-1 w-2 h-5 bg-cyber-accent"></span>
+                  <span className="ml-1 w-2 h-6 bg-cyber-accent"></span>
                 </div>
               )}
             </div>
             <button
               onClick={handleSubmit}
-              className="bg-cyber-accent text-cyber-dark w-12 h-12 rounded-lg flex items-center justify-center hover:bg-opacity-80 transition-all duration-300"
+              className="bg-cyber-accent text-cyber-dark w-14 h-14 rounded-lg flex items-center justify-center hover:bg-opacity-80 transition-all duration-300"
               disabled={!inputValue.trim()}
             >
-              <ArrowUp size={20} />
+              <ArrowUp size={22} />
             </button>
           </div>
         </div>
