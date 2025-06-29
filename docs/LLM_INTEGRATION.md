@@ -6,7 +6,7 @@ The DASSH chat system now includes real AI integration with both Google Gemini a
 ## Current Configuration
 
 ### Integrated Providers
-1. **Google Gemini Pro** - Primary provider (cost-effective, good performance)
+1. **Google Gemini 1.5 Flash** - Primary provider (cost-effective, good performance)
 2. **OpenAI GPT-3.5-turbo** - Secondary provider (high quality, reliable)
 
 ### API Keys Configured
@@ -55,7 +55,7 @@ interface LLMProvider {
 ```
 
 ### Google Gemini Integration
-- **Model**: `gemini-pro`
+- **Model**: `gemini-1.5-flash`
 - **Max Tokens**: 1,500
 - **Temperature**: 0.7
 - **Safety Settings**: Medium and above blocking for harmful content
