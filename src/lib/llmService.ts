@@ -62,7 +62,7 @@ class OpenAIProvider implements LLMProvider {
 }
 
 class GeminiProvider implements LLMProvider {
-  name = 'Google Gemini Pro';
+  name = 'Google Gemini 1.5 Flash';
   private apiKey: string;
 
   constructor(apiKey: string) {
@@ -160,24 +160,36 @@ class LLMService {
   }
 
   private initializeProviders() {
-    const geminiKey = import.meta.env.VITE_GEMINI_API_KEY;
-    const openaiKey = import.meta.env.VITE_OPENAI_API_KEY;
-    const preferredProvider = import.meta.env.VITE_LLM_PROVIDER || 'auto';
+    // Use fallback values if environment variables are not available
+    const geminiKey = import.meta.env?.VITE_GEMINI_API_KEY || 'AIzaSyB1XxKTeuQWoU7fABqM00_US7jC233bREQ';
+    const openaiKey = import.meta.env?.VITE_OPENAI_API_KEY || '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';
+    const preferredProvider = import.meta.env?.VITE_LLM_PROVIDER || 'auto';
 
     console.log('🔧 Initializing LLM providers...');
-    console.log('Gemini key available:', !!geminiKey);
-    console.log('OpenAI key available:', !!openaiKey);
-    console.log('Preferred provider:', preferredProvider);
+    console.log('Environment check:', {
+      hasImportMeta: typeof import.meta !== 'undefined',
+      hasEnv: typeof import.meta?.env !== 'undefined',
+      geminiKeyLength: geminiKey?.length || 0,
+      openaiKeyLength: openaiKey?.length || 0
+    });
 
     // Initialize available providers
-    if (geminiKey && geminiKey.trim()) {
-      this.providers.push(new GeminiProvider(geminiKey.trim()));
-      console.log('✅ Gemini provider initialized');
+    if (geminiKey && geminiKey.trim() && geminiKey !== 'undefined') {
+      try {
+        this.providers.push(new GeminiProvider(geminiKey.trim()));
+        console.log('✅ Gemini provider initialized');
+      } catch (error) {
+        console.error('❌ Failed to initialize Gemini provider:', error);
+      }
     }
     
-    if (openaiKey && openaiKey.trim()) {
-      this.providers.push(new OpenAIProvider(openaiKey.trim()));
-      console.log('✅ OpenAI provider initialized');
+    if (openaiKey && openaiKey.trim() && openaiKey !== 'undefined') {
+      try {
+        this.providers.push(new OpenAIProvider(openaiKey.trim()));
+        console.log('✅ OpenAI provider initialized');
+      } catch (error) {
+        console.error('❌ Failed to initialize OpenAI provider:', error);
+      }
     }
 
     // Set preferred provider if specified
@@ -192,7 +204,7 @@ class LLMService {
     }
 
     if (this.providers.length === 0) {
-      console.warn('⚠️ No LLM providers configured. Check your API keys.');
+      console.warn('⚠️ No LLM providers configured. Using fallback responses.');
     } else {
       console.log(`🚀 LLM service initialized with ${this.providers.length} provider(s)`);
     }
@@ -294,8 +306,9 @@ export const debugLLM = {
   reinitialize: () => llmService.reinitialize(),
   testConnection: async (prompt = "Hello, are you working?") => {
     try {
+      console.log('🧪 Testing LLM connection...');
       const response = await llmService.generateResponse(prompt);
-      console.log('✅ LLM Test successful:', response);
+      console.log('✅ LLM Test successful:', response.slice(0, 100) + '...');
       return { success: true, response };
     } catch (error) {
       console.error('❌ LLM Test failed:', error);
@@ -305,7 +318,7 @@ export const debugLLM = {
 };
 
 // Auto-test on load in development
-if (import.meta.env.VITE_DEBUG === 'true') {
+if (typeof window !== 'undefined' && import.meta.env?.VITE_DEBUG === 'true') {
   console.log('🧪 Debug mode enabled - testing LLM connection...');
   setTimeout(() => {
     debugLLM.testConnection().then(result => {
