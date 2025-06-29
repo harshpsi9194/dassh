@@ -46,4 +46,3 @@ export const auth = {
     return supabase.auth.onAuthStateChange(callback)
   }
 }
-console.log(import.meta.env.VITE_SUPABASE_URL)
