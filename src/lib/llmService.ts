@@ -11,7 +11,7 @@ interface LLMProvider {
 }
 
 class OpenAIProvider implements LLMProvider {
-  name = 'OpenAI GPT';
+  name = 'OpenAI GPT-3.5';
   private apiKey: string;
 
   constructor(apiKey: string) {
@@ -24,12 +24,14 @@ class OpenAIProvider implements LLMProvider {
         role: 'system', 
         content: 'You are DASSH, a helpful AI assistant. Provide clear, comprehensive, and engaging responses. Be conversational but informative.' 
       },
-      ...conversationHistory.slice(-10).map(msg => ({
+      ...conversationHistory.slice(-8).map(msg => ({
         role: msg.role,
         content: msg.content
       })),
       { role: 'user', content: prompt }
     ];
+
+    console.log('🤖 OpenAI: Sending request with', messages.length, 'messages');
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -48,17 +50,19 @@ class OpenAIProvider implements LLMProvider {
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(`OpenAI API error: ${response.status} - ${errorData.error?.message || response.statusText}`);
+      const errorText = await response.text();
+      console.error('OpenAI API Error:', response.status, errorText);
+      throw new Error(`OpenAI API error (${response.status}): ${errorText}`);
     }
 
     const data = await response.json();
+    console.log('✅ OpenAI: Response received');
     return data.choices[0].message.content;
   }
 }
 
 class GeminiProvider implements LLMProvider {
-  name = 'Google Gemini';
+  name = 'Google Gemini Pro';
   private apiKey: string;
 
   constructor(apiKey: string) {
@@ -70,14 +74,16 @@ class GeminiProvider implements LLMProvider {
     let contextPrompt = 'You are DASSH, a helpful AI assistant. Provide clear, comprehensive, and engaging responses. Be conversational but informative.\n\n';
     
     if (conversationHistory.length > 0) {
-      contextPrompt += 'Previous conversation context:\n';
-      conversationHistory.slice(-8).forEach(msg => {
+      contextPrompt += 'Previous conversation:\n';
+      conversationHistory.slice(-6).forEach(msg => {
         contextPrompt += `${msg.role === 'user' ? 'Human' : 'Assistant'}: ${msg.content}\n`;
       });
       contextPrompt += '\n';
     }
     
     contextPrompt += `Human: ${prompt}\nAssistant:`;
+
+    console.log('🤖 Gemini: Sending request');
 
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${this.apiKey}`, {
       method: 'POST',
@@ -119,8 +125,9 @@ class GeminiProvider implements LLMProvider {
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(`Gemini API error: ${response.status} - ${errorData.error?.message || response.statusText}`);
+      const errorText = await response.text();
+      console.error('Gemini API Error:', response.status, errorText);
+      throw new Error(`Gemini API error (${response.status}): ${errorText}`);
     }
 
     const data = await response.json();
@@ -134,6 +141,11 @@ class GeminiProvider implements LLMProvider {
       throw new Error('Response blocked by safety filters');
     }
 
+    if (!candidate.content || !candidate.content.parts || candidate.content.parts.length === 0) {
+      throw new Error('Invalid response format from Gemini API');
+    }
+
+    console.log('✅ Gemini: Response received');
     return candidate.content.parts[0].text;
   }
 }
@@ -141,6 +153,7 @@ class GeminiProvider implements LLMProvider {
 class LLMService {
   private providers: LLMProvider[] = [];
   private currentProviderIndex = 0;
+  private isInitialized = false;
 
   constructor() {
     this.initializeProviders();
@@ -151,13 +164,20 @@ class LLMService {
     const openaiKey = import.meta.env.VITE_OPENAI_API_KEY;
     const preferredProvider = import.meta.env.VITE_LLM_PROVIDER || 'auto';
 
+    console.log('🔧 Initializing LLM providers...');
+    console.log('Gemini key available:', !!geminiKey);
+    console.log('OpenAI key available:', !!openaiKey);
+    console.log('Preferred provider:', preferredProvider);
+
     // Initialize available providers
-    if (geminiKey) {
-      this.providers.push(new GeminiProvider(geminiKey));
+    if (geminiKey && geminiKey.trim()) {
+      this.providers.push(new GeminiProvider(geminiKey.trim()));
+      console.log('✅ Gemini provider initialized');
     }
     
-    if (openaiKey) {
-      this.providers.push(new OpenAIProvider(openaiKey));
+    if (openaiKey && openaiKey.trim()) {
+      this.providers.push(new OpenAIProvider(openaiKey.trim()));
+      console.log('✅ OpenAI provider initialized');
     }
 
     // Set preferred provider if specified
@@ -167,72 +187,100 @@ class LLMService {
       );
       if (preferredIndex !== -1) {
         this.currentProviderIndex = preferredIndex;
+        console.log(`🎯 Using preferred provider: ${this.providers[preferredIndex].name}`);
       }
     }
 
     if (this.providers.length === 0) {
-      console.warn('No LLM providers configured. Using fallback responses.');
+      console.warn('⚠️ No LLM providers configured. Check your API keys.');
+    } else {
+      console.log(`🚀 LLM service initialized with ${this.providers.length} provider(s)`);
     }
+
+    this.isInitialized = true;
   }
 
   async generateResponse(prompt: string, conversationHistory: Message[] = []): Promise<string> {
+    if (!this.isInitialized) {
+      this.initializeProviders();
+    }
+
     if (this.providers.length === 0) {
       return this.getFallbackResponse(prompt);
     }
 
+    console.log(`🎯 Generating response for: "${prompt.slice(0, 50)}..."`);
+
     // Try each provider in order until one succeeds
+    let lastError: Error | null = null;
+    
     for (let attempt = 0; attempt < this.providers.length; attempt++) {
       const provider = this.providers[this.currentProviderIndex];
       
       try {
-        console.log(`Generating response using ${provider.name}...`);
+        console.log(`🔄 Attempt ${attempt + 1}: Using ${provider.name}`);
         const response = await provider.generateResponse(prompt, conversationHistory);
         
-        // Success! Return the response
-        return response;
+        if (response && response.trim()) {
+          console.log(`✅ Success with ${provider.name}`);
+          return response.trim();
+        } else {
+          throw new Error('Empty response received');
+        }
         
       } catch (error) {
-        console.error(`Error with ${provider.name}:`, error);
+        lastError = error as Error;
+        console.error(`❌ ${provider.name} failed:`, error);
         
         // Try next provider
         this.currentProviderIndex = (this.currentProviderIndex + 1) % this.providers.length;
-        
-        // If this was the last provider, throw the error
-        if (attempt === this.providers.length - 1) {
-          throw new Error(`All LLM providers failed. Last error: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
       }
     }
 
-    // Fallback if all providers fail
-    return this.getFallbackResponse(prompt);
+    // All providers failed
+    console.error('💥 All LLM providers failed');
+    throw new Error(`All AI providers failed. Last error: ${lastError?.message || 'Unknown error'}`);
   }
 
   private getFallbackResponse(prompt: string): string {
     const fallbackResponses = [
-      "I apologize, but I'm experiencing some technical difficulties right now. Please try again in a moment.",
+      "I apologize, but I'm experiencing technical difficulties connecting to AI services right now. This could be due to API key issues or network problems. Please check the console for more details and try again.",
       
-      "I'm currently unable to process your request due to a temporary service issue. Please try again shortly.",
+      "I'm currently unable to process your request due to AI service connectivity issues. Please verify that the API keys are properly configured and try again in a moment.",
       
-      "There seems to be a connectivity issue with my AI services. Your message is important to me, so please try again in a few moments.",
-      
-      "I'm experiencing some technical challenges at the moment. Please bear with me and try your request again.",
+      "There seems to be an issue with the AI service configuration. Please check that your API keys are valid and the services are accessible, then try your request again.",
     ];
 
     const randomResponse = fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)];
     
-    return `${randomResponse}\n\nYour message: "${prompt.slice(0, 100)}${prompt.length > 100 ? '...' : ''}"`;
+    return `${randomResponse}\n\n**Your message:** "${prompt.slice(0, 100)}${prompt.length > 100 ? '...' : ''}"`;
   }
 
   // Get current provider info for debugging
   getCurrentProvider(): string {
-    if (this.providers.length === 0) return 'No providers available';
+    if (!this.isInitialized) {
+      return 'Not initialized';
+    }
+    if (this.providers.length === 0) {
+      return 'No providers available';
+    }
     return this.providers[this.currentProviderIndex].name;
   }
 
   // Get all available providers
   getAvailableProviders(): string[] {
+    if (!this.isInitialized) {
+      return [];
+    }
     return this.providers.map(p => p.name);
+  }
+
+  // Force re-initialization (useful for debugging)
+  reinitialize(): void {
+    this.providers = [];
+    this.currentProviderIndex = 0;
+    this.isInitialized = false;
+    this.initializeProviders();
   }
 }
 
@@ -243,4 +291,29 @@ export const llmService = new LLMService();
 export const debugLLM = {
   getCurrentProvider: () => llmService.getCurrentProvider(),
   getAvailableProviders: () => llmService.getAvailableProviders(),
+  reinitialize: () => llmService.reinitialize(),
+  testConnection: async (prompt = "Hello, are you working?") => {
+    try {
+      const response = await llmService.generateResponse(prompt);
+      console.log('✅ LLM Test successful:', response);
+      return { success: true, response };
+    } catch (error) {
+      console.error('❌ LLM Test failed:', error);
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    }
+  }
 };
+
+// Auto-test on load in development
+if (import.meta.env.VITE_DEBUG === 'true') {
+  console.log('🧪 Debug mode enabled - testing LLM connection...');
+  setTimeout(() => {
+    debugLLM.testConnection().then(result => {
+      if (result.success) {
+        console.log('🎉 LLM service is working correctly!');
+      } else {
+        console.error('🚨 LLM service test failed:', result.error);
+      }
+    });
+  }, 1000);
+}

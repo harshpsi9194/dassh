@@ -6,7 +6,7 @@ import ChatSidebar from '@/components/ChatSidebar';
 import ChatMessages from '@/components/ChatMessages';
 import ChatInput from '@/components/ChatInput';
 import { conversationService } from '@/lib/conversationService';
-import { llmService } from '@/lib/llmService';
+import { llmService, debugLLM } from '@/lib/llmService';
 
 interface User {
   email: string;
@@ -45,10 +45,12 @@ const ChatInterface = () => {
       try {
         const { data: { session } } = await auth.getSession();
         if (!session?.user) {
+          console.log('No session found, redirecting to home');
           navigate('/');
           return;
         }
         
+        console.log('User authenticated:', session.user.email);
         setUser({
           email: session.user.email!,
           id: session.user.id,
@@ -69,6 +71,7 @@ const ChatInterface = () => {
     // Listen for auth changes
     const { data: { subscription } } = auth.onAuthStateChange((event, session) => {
       if (!session?.user) {
+        console.log('Auth state changed: no user, redirecting');
         navigate('/');
       }
     });
@@ -83,7 +86,9 @@ const ChatInterface = () => {
 
   const loadConversations = async (userId: string) => {
     try {
+      console.log('Loading conversations for user:', userId);
       const userConversations = await conversationService.getUserConversations(userId);
+      console.log('Loaded conversations:', userConversations.length);
       setConversations(userConversations);
       
       // Set the most recent conversation as current if none selected
@@ -104,9 +109,11 @@ const ChatInterface = () => {
     if (!user) return;
 
     try {
+      console.log('Creating new conversation');
       const newConversation = await conversationService.createConversation(user.id, "New Chat");
       setConversations(prev => [newConversation, ...prev]);
       setCurrentConversation(newConversation);
+      console.log('New conversation created:', newConversation.id);
     } catch (error) {
       console.error('Error creating conversation:', error);
       toast({
@@ -118,11 +125,13 @@ const ChatInterface = () => {
   };
 
   const selectConversation = (conversation: Conversation) => {
+    console.log('Selecting conversation:', conversation.id);
     setCurrentConversation(conversation);
   };
 
   const deleteConversation = async (conversationId: string) => {
     try {
+      console.log('Deleting conversation:', conversationId);
       await conversationService.deleteConversation(conversationId);
       setConversations(prev => prev.filter(c => c.id !== conversationId));
       
@@ -150,10 +159,12 @@ const ChatInterface = () => {
 
     try {
       setIsGenerating(true);
+      console.log('Sending message:', content.slice(0, 50) + '...');
 
       // Create conversation if none exists
       let conversation = currentConversation;
       if (!conversation) {
+        console.log('No current conversation, creating new one');
         conversation = await conversationService.createConversation(user.id, content.slice(0, 50) + "...");
         setConversations(prev => [conversation!, ...prev]);
         setCurrentConversation(conversation);
@@ -167,6 +178,7 @@ const ChatInterface = () => {
         timestamp: new Date(),
       };
 
+      console.log('Adding user message to conversation');
       await conversationService.addMessage(conversation.id, userMessage);
       
       // Update local state immediately for better UX
@@ -177,7 +189,12 @@ const ChatInterface = () => {
 
       // Get AI response
       try {
+        console.log('Requesting AI response...');
+        console.log('Available providers:', debugLLM.getAvailableProviders());
+        console.log('Current provider:', debugLLM.getCurrentProvider());
+        
         const aiResponse = await llmService.generateResponse(content, conversation.messages);
+        console.log('AI response received:', aiResponse.slice(0, 100) + '...');
         
         const assistantMessage: Message = {
           id: (Date.now() + 1).toString(),
@@ -242,6 +259,7 @@ const ChatInterface = () => {
 
   const handleLogout = async () => {
     try {
+      console.log('Logging out user');
       await auth.signOut();
       navigate('/');
     } catch (error) {

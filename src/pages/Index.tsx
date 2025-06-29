@@ -40,8 +40,6 @@ const Index = () => {
             email: session.user.email!,
             id: session.user.id,
           });
-          // Redirect authenticated users to chat interface
-          navigate('/chat');
         }
       } catch (error) {
         console.error('Error checking session:', error);
@@ -55,13 +53,16 @@ const Index = () => {
     // Listen for auth changes
     const { data: { subscription } } = auth.onAuthStateChange(
       (event, session) => {
+        console.log('Auth state change:', event, session?.user?.email);
         if (session?.user) {
           setUser({
             email: session.user.email!,
             id: session.user.id,
           });
-          // Redirect to chat interface after successful login
-          navigate('/chat');
+          // Only redirect to chat if user explicitly logged in (not on page load)
+          if (event === 'SIGNED_IN') {
+            navigate('/chat');
+          }
         } else {
           setUser(null);
         }
@@ -88,6 +89,14 @@ const Index = () => {
 
   const handleBackToMain = () => {
     setShowAbout(false);
+  };
+
+  const handleChatClick = () => {
+    if (user) {
+      navigate('/chat');
+    } else {
+      setShowAuthModal(true);
+    }
   };
 
   if (showAbout) {
@@ -125,16 +134,20 @@ const Index = () => {
             with thoughtful and comprehensive responses.
           </p>
           
-          {!user && (
-            <div className="mt-12">
-              <button
-                onClick={() => setShowAuthModal(true)}
-                className="cyber-button text-lg px-8 py-4 glow-on-hover"
-              >
-                Get Started - Sign In
-              </button>
-            </div>
-          )}
+          <div className="mt-12 space-y-4">
+            <button
+              onClick={handleChatClick}
+              className="cyber-button text-lg px-8 py-4 glow-on-hover mr-4"
+            >
+              {user ? 'Continue to Chat' : 'Get Started - Sign In'}
+            </button>
+            
+            {user && (
+              <div className="text-cyber-muted">
+                Welcome back, {user.email}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
